@@ -118,9 +118,7 @@ class MetricDaoRedis(MetricDaoBase, RedisDaoBase):
         """Insert a specific metric."""
         metric_key = self.key_schema.day_metric_key(site_id, unit, time)  # pylint: disable=unused-variable
         minute_of_day = self._get_day_minute(time) # pylint: disable=unused-variable
-
-        # START Challenge #2
-        # END Challenge #2
+        pipeline.zadd(metric_key, {str(MeasurementMinute(value, minute_of_day)): minute_of_day})
 
     def get_recent(self, site_id: int, unit: MetricUnit, time: datetime.datetime,
                    limit: int, **kwargs) -> Deque[Measurement]:
