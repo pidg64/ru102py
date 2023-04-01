@@ -73,6 +73,21 @@ class SiteGeoDaoRedis(SiteGeoDaoBase, RedisDaoBase):
         site_ids: List[str] = []
         scores: Dict[str, float] = {}
 
+        site_ids = self.redis.georadius(  # type: ignore
+            self.key_schema.site_geo_key(), 
+            query.coordinate.lng, 
+            query.coordinate.lat,
+            query.radius, 
+            query.radius_unit.value
+        )
+
+        for site_id in site_ids:
+            p.zscore(
+                self.key_schema.capacity_ranking_key(),
+                site_id
+            )
+        scores = dict(zip(site_ids, p.execute()))
+
         for site_id in site_ids:
             if scores[site_id] and scores[site_id] > CAPACITY_THRESHOLD:
                 p.hgetall(self.key_schema.site_hash_key(site_id))
